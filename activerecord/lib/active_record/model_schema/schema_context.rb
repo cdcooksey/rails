@@ -37,12 +37,27 @@ module ActiveRecord
           end
           default_keys = DatabaseDefaultKeys.new(context.model_class.primary_key_definition, context.columns_hash)
           @builder = ActiveModel::AttributeSet::Builder.new(@types, defaults, default_keys)
-          @column_defaults = defaults.to_hash.freeze if defaults.read_only?
+          @column_defaults = defaults.read_only? ? defaults.to_hash.freeze : nil
+          @proc_defaults = defaults.values.any?(&:proc_default?)
         end
 
-        # Lazy otherwise, since evaluating them calls proc defaults.
+        # Lazy otherwise, since evaluating them calls proc defaults. Rebuilt on
+        # each call when a default is a proc, so the proc is called again.
         def column_defaults
-          @column_defaults ||= defaults.deep_dup.to_hash.freeze
+          if @proc_defaults
+            defaults.deep_dup.to_hash.freeze
+          else
+            @column_defaults ||= defaults.deep_dup.to_hash.freeze
+          end
+        end
+
+        # A single column's default, without evaluating the others.
+        def column_default(name)
+          if @proc_defaults
+            defaults[name].dup_or_share.value
+          else
+            column_defaults[name]
+          end
         end
       end
 

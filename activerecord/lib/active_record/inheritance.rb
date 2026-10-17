@@ -71,7 +71,8 @@ module ActiveRecord
           end
 
           if subclass.nil? && base_class?
-            subclass = subclass_from_attributes(column_defaults)
+            default_type = schema_context.attributes.column_default(inheritance_column)
+            subclass = find_sti_class(default_type) if default_type.present?
           end
 
           if subclass && subclass != self

@@ -520,6 +520,7 @@ module ActiveRecord
 
       # Returns a hash where the keys are column names and the values are
       # default values when instantiating the Active Record object for this table.
+      # Proc defaults are called each time this method is called.
       def column_defaults
         schema_context.attributes.column_defaults
       end

@@ -388,6 +388,19 @@ class InheritanceTest < ActiveRecord::TestCase
     end
   end
 
+  def test_new_without_type_does_not_evaluate_proc_defaults
+    counter = 0
+    klass = Class.new(ActiveRecord::Base) do
+      self.table_name = "companies"
+      attribute :name, :string, default: -> { counter += 1 }
+    end
+
+    klass.new
+    klass.new
+
+    assert_equal 0, counter
+  end
+
   def test_inheritance_condition
     assert_equal 12, Company.count
     assert_equal 3, Firm.count
@@ -628,6 +641,35 @@ class InheritanceAttributeTest < ActiveRecord::TestCase
     empire = Company.new(type: "InheritanceAttributeTest::Empire") # without arguments
     assert_equal "InheritanceAttributeTest::Empire", empire.type
     assert_instance_of Empire, empire
+  end
+
+  class CompanyWithProcDefault < ActiveRecord::Base
+    self.table_name = "companies"
+    attribute :type, :string, default: -> { "InheritanceAttributeTest::Venture" }
+  end
+
+  class Venture < CompanyWithProcDefault
+  end
+
+  def test_inheritance_new_with_subclass_as_proc_default
+    venture = CompanyWithProcDefault.new
+    assert_equal "InheritanceAttributeTest::Venture", venture.type
+    assert_instance_of Venture, venture
+  end
+
+  class CompanyWithOtherProcDefault < ActiveRecord::Base
+    self.table_name = "companies"
+    attribute :type, :string, default: "InheritanceAttributeTest::Outpost"
+    attribute :name, :string, default: -> { "generated" }
+  end
+
+  class Outpost < CompanyWithOtherProcDefault
+  end
+
+  def test_inheritance_new_with_subclass_as_default_alongside_a_proc_default
+    outpost = CompanyWithOtherProcDefault.new
+    assert_equal "InheritanceAttributeTest::Outpost", outpost.type
+    assert_instance_of Outpost, outpost
   end
 end
 

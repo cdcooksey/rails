@@ -1,3 +1,16 @@
+*   Evaluate proc defaults on each call to `column_defaults`.
+
+    `column_defaults` returned the value from the first evaluation of a proc
+    default on every later call. For models with a proc default, it now runs
+    the procs and returns a new hash on each call. Models without one keep
+    the memoized hash.
+
+    Instantiating a single table inheritance base class without a type no
+    longer evaluates proc defaults, except one on the inheritance column
+    itself.
+
+    *Charlie Cooksey*
+
 *   Truncate tables shadowed by a same-named table earlier on the PostgreSQL
     `search_path`.
 

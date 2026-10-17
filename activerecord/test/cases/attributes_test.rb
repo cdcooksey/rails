@@ -245,6 +245,25 @@ module ActiveRecord
       assert_equal 3, klass.new.counter
     end
 
+    test "procs for default values are not memoized" do
+      klass = Class.new(OverloadedType) do
+        attribute :uuid, :string, default: -> { SecureRandom.uuid }
+      end
+
+      first_default = klass.column_defaults["uuid"]
+      second_default = klass.column_defaults["uuid"]
+
+      assert_not_equal first_default, second_default
+    end
+
+    test "column_defaults is memoized when no default is a proc" do
+      klass = Class.new(OverloadedType) do
+        attribute :status, :string, default: "draft"
+      end
+
+      assert_same klass.column_defaults, klass.column_defaults
+    end
+
     test "procs are memoized before type casting" do
       klass = Class.new(OverloadedType) do
         @@counter = 0

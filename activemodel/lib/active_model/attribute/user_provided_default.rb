@@ -16,7 +16,7 @@ module ActiveModel
       end
 
       def value_before_type_cast
-        if user_provided_value.is_a?(Proc)
+        if proc_default?
           @memoized_value_before_type_cast ||= user_provided_value.call
         else
           @user_provided_value
@@ -31,10 +31,14 @@ module ActiveModel
         false
       end
 
+      def proc_default? # :nodoc:
+        user_provided_value.is_a?(Proc)
+      end
+
       def dup_or_share # :nodoc:
         # Can't elide dup when the default is a Proc
         # See Attribute#dup_or_share
-        if @user_provided_value.is_a?(Proc)
+        if proc_default?
           dup
         else
           super

@@ -43,6 +43,10 @@ module ActiveModel
       true
     end
 
+    def proc_default? # :nodoc:
+      false
+    end
+
     def freeze
       value.freeze
       super
